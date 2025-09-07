@@ -1,0 +1,18 @@
+# === Build outputs ===
+/bin/
+/target/
+*.class
+*.war
+*.ear
+
+# === Eclipse project files ===
+.project
+.classpath
+.settings/
+
+# === Logs & temp ===
+*.log
+
+# === OS-specific files ===
+.DS_Store
+Thumbs.db
