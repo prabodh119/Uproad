@@ -22,8 +22,8 @@ import dao.VehicleDetail;
 public class DBConnection {
 	
 	public Connection connect() {
-       //String url = "jdbc:sqlite:C:/sqlite/db/restdb.db";
-       String url = "jdbc:sqlite:opt/tomcat/uproad/db/testdb.db";
+       String url = "jdbc:sqlite:C:/sqlite/db/restdb.db";
+       //String url = "jdbc:sqlite:opt/tomcat/uproad/db/testdb.db";
 
         try {
         	Class.forName("org.sqlite.JDBC");
@@ -490,7 +490,7 @@ public class DBConnection {
 						rs.getString("address"),
 						rs.getString("contact_no"),
 						rs.getString("contact_2"),
-						rs.getString("contact_2"),
+						rs.getString("contact_3"),
 						rs.getString("near_city"),
 						rs.getString("highway"),
 						rs.getString("website"),

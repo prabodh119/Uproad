@@ -9,13 +9,11 @@ import javax.servlet.http.HttpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import dao.ServiceType;
 import dao.User;
-import dao.VehicleCategory;
 import dbc.DBConnection;
+import util.TokenUtil;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -46,27 +44,51 @@ public class LoginFilter implements Filter {
         else 
         	logger.info(uri);
        
-        List<String> allowedPaths = Arrays.asList("/uproad/", "/uproad/LoginServlet", "/uproad/SignupServlet", "/uproad/VehicleCategoryServlet", "/uproad/landing.html", "/uproad/login.jsp");
+        List<String> allowedPaths = Arrays.asList(
+        		"/uproad/", 
+        		"/uproad/LoginServlet", 
+        		"/uproad/SignupServlet", 
+        		"/uproad/VehicleCategoryServlet", 
+        		"/uproad/landing.html", 
+        		"/uproad/login.jsp"
+        );
         
         // Allow static resources by file extension
         boolean isStaticResource = uri.endsWith(".css") || uri.endsWith(".js") || uri.endsWith(".png")
                 || uri.endsWith(".jpg") || uri.endsWith(".jpeg") || uri.endsWith(".gif")
                 || uri.endsWith(".woff") || uri.endsWith(".ttf") || uri.endsWith(".ico") || uri.endsWith(".svg");
 
+        // API request detection
+        boolean isApiRequest = uri.startsWith("/uproad/api/");
+        boolean isLoginApi = uri.equals("/uproad/api/login");
         
-        if (isLoggedIn || allowedPaths.contains(uri) || isStaticResource) {
+        if (isApiRequest) {
+            if (isLoginApi) {
+                // Login API is always allowed
+            	chain.doFilter(request, response);
+            } else {
+                // Check for Bearer token
+                String authHeader = httpRequest.getHeader("Authorization");
+                if (authHeader != null && authHeader.startsWith("Bearer ")) {
+                    String token = authHeader.substring(7);
+                    if (TokenUtil.isValid(token)) {
+                        chain.doFilter(request, response);
+                        return;
+                    }
+                }
+
+                // Unauthorized API call
+                httpResponse.setContentType("application/json");
+                httpResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                httpResponse.getWriter().write("{\"success\": false, \"message\": \"Unauthorized\"}");
+            } 
+            
+        } else if (isLoggedIn || allowedPaths.contains(uri) || isStaticResource) {
             // Set common attributes
-            ArrayList<VehicleCategory> catList = new DBConnection().getVehicleCategory();
-            request.setAttribute("categories", catList);
-
-            ArrayList<ServiceType> serviceList = new DBConnection().getServiceTypes();
-            request.setAttribute("services", serviceList);
-
-            ArrayList<String> allCities = new DBConnection().getAllCities();
-            request.setAttribute("cities", allCities);
-
-            ArrayList<String> allHighways = new DBConnection().getAllHighways();
-            request.setAttribute("highways", allHighways);
+            request.setAttribute("categories", new DBConnection().getVehicleCategory());
+            request.setAttribute("services", new DBConnection().getServiceTypes());
+            request.setAttribute("cities", new DBConnection().getAllCities());
+            request.setAttribute("highways", new DBConnection().getAllHighways());
 
             chain.doFilter(request, response);
             
