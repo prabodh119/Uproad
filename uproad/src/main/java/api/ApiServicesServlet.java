@@ -56,6 +56,7 @@ public class ApiServicesServlet extends HttpServlet {
             // 2️⃣ Fetch services from DB
             DBConnection dbc = new DBConnection();
             List<ServiceType> services = dbc.getServiceTypes(); // implement in DBConnection
+            
 
             JSONArray arr = new JSONArray();
             for (ServiceType s : services) {
@@ -63,7 +64,7 @@ public class ApiServicesServlet extends HttpServlet {
                 obj.put("serviceType", s.getServiceType());
                 arr.put(obj);
             }
-
+            
             out.write(arr.toString());
 
         } catch (Exception e) {

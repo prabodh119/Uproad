@@ -64,11 +64,17 @@ public class ApiSearchServlet extends HttpServlet {
                     sb.append(line);
                 }
             }
+            
             JSONObject reqJson = new JSONObject(sb.toString());
 
             String username = tokenUsername;
             String vehicleCategory = reqJson.getString("vehicleCategory");
-            String serviceTypes = reqJson.getString("serviceTypes");
+            JSONArray serviceTypesJson = reqJson.getJSONArray("serviceTypes");
+            
+            String[] serviceTypes = new String[serviceTypesJson.length()];
+            for (int i = 0; i < serviceTypesJson.length(); i++) {
+                serviceTypes[i] = serviceTypesJson.getString(i);
+            }
             String nearestCity = reqJson.getString("nearestCity");
 
             // ✅ 3. Check token username matches request username
@@ -128,7 +134,8 @@ public class ApiSearchServlet extends HttpServlet {
 	 */
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		// TODO Auto-generated method stub
-		//doGet(request, response);
+		response.setStatus(HttpServletResponse.SC_METHOD_NOT_ALLOWED); // 405
+	    response.getWriter().write("{\"error\":\"GET method not allowed\"}");
 	}
 
 }
