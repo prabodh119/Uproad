@@ -44,7 +44,9 @@ public class VehicleCategoryServlet extends HttpServlet {
         }
         
         String json = new Gson().toJson(catString);
+        System.out.println(json);
         response.getWriter().write(json);
+       
 	}
 
 	/**

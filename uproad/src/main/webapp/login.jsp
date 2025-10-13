@@ -195,16 +195,17 @@
 <script>
 	$(document).ready(function () {
 	    $.ajax({
-	        url: '/uproad/VehicleCategoryServlet', // URL of servlet
+	        url: '/uproad/api/vehicleCategories',   // updated URL
 	        type: 'GET',
 	        dataType: 'json',
 	        success: function (data) {
-	            var select = $('select[name="vehicleCategory"]');
-	            select.empty(); // Clear existing options
+	            var select = $('#vehicleCategoryDropdown');
+	            select.empty();
 	            select.append('<option value="" disabled selected>Select Vehicle Type</option>');
 	
-	            $.each(data, function (index, category) {
-	                select.append('<option value="' + category + '">' + category + '</option>');
+	            // data is an array of objects like { vehicleCategory: "Car" }
+	            $.each(data, function (index, item) {
+	                select.append('<option value="' + item.vehicleCategory + '">' + item.vehicleCategory + '</option>');
 	            });
 	        },
 	        error: function () {

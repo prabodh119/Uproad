@@ -23,8 +23,8 @@ import exc.DuplicateGarageException;
 public class DBConnection {
 	
 	public Connection connect() {
-       //String url = "jdbc:sqlite:C:/sqlite/db/testdb.db";
-       String url = "jdbc:sqlite:/opt/tomcat/uproad/db/testdb.db";
+       String url = "jdbc:sqlite:C:/sqlite/db/testdb.db";
+       //String url = "jdbc:sqlite:/opt/tomcat/uproad/db/testdb.db";
 
         try {
         	Class.forName("org.sqlite.JDBC");

@@ -48,7 +48,6 @@ public class LoginFilter implements Filter {
         		"/uproad/", 
         		"/uproad/LoginServlet", 
         		"/uproad/SignupServlet", 
-        		"/uproad/VehicleCategoryServlet", 
         		"/uproad/landing.html", 
         		"/uproad/login.jsp"
         );
@@ -60,10 +59,11 @@ public class LoginFilter implements Filter {
 
         // API request detection
         boolean isApiRequest = uri.startsWith("/uproad/api/");
+        boolean isPublicApi = uri.equals("/uproad/api/vehicleCategories");
         boolean isLoginApi = uri.equals("/uproad/api/login");
         
         if (isApiRequest) {
-            if (isLoginApi) {
+            if (isLoginApi || isPublicApi) {
                 // Login API is always allowed
             	chain.doFilter(request, response);
             } else {
