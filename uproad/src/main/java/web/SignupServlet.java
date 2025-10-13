@@ -52,7 +52,7 @@ public class SignupServlet extends HttpServlet {
         else
         	request.setAttribute("message", "Registration Failed !");
         
-        request.getRequestDispatcher("index.jsp").forward(request, response);
+        request.getRequestDispatcher("login.jsp").forward(request, response);
 		
 	}
 

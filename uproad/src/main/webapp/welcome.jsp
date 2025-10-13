@@ -118,6 +118,13 @@
 			            <input type="text"  id="highway" name="highway" placeholder="Enter highway...">
 			            <button type="button" onclick="submitSearchForm('highway')">Search</button><br>
 			            <div id="highwaySuggestions"></div>
+			            <br>
+			            
+			            <!-- Telephone -->
+			            <label for="phoneInput">Search by Phone No.:</label><br>
+			            <input type="text"  id="phone" name="phone" placeholder="Enter phone no....">
+			            <button type="button" onclick="submitSearchForm('phone')">Search</button><br>
+			            
 		        	</form>
 	            </div>
         </div>
@@ -140,7 +147,10 @@
 	            inputValue = document.getElementById("nearestCity").value.trim();
 	        } else if (type === "highway") {
 	            inputValue = document.getElementById("highway").value.trim();
+	        } else if (type === "phone") {
+	            inputValue = document.getElementById("phone").value.trim();
 	        }
+	        
 	
 	        if (inputValue === "") {
 	            alert("Please enter a value to search.");

@@ -1,6 +1,7 @@
 package web;
 
 import java.io.IOException;
+import java.sql.SQLException;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -9,6 +10,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import dbc.DBConnection;
+import exc.DuplicateGarageException;
 
 /**
  * Servlet implementation class InsertDataServlet
@@ -50,12 +52,16 @@ public class InsertDataServlet extends HttpServlet {
 
 
         DBConnection dbc = new DBConnection();
-        int result = dbc.insertGarageData(garageName, address, contactNumber, contactNumber2, contactNumber3, nearestCity, highway, website, vehicleCategoryStr, servicesProvidedStr, field12, field13, "", "");
-        
-        if(result > 0)
+        try {
+        	dbc.insertGarageData(garageName, address, contactNumber, contactNumber2, contactNumber3, nearestCity, highway, website, vehicleCategoryStr, servicesProvidedStr, field12, field13, "", "");
         	request.setAttribute("message", "Garage information successfully inserted.");
-        else
-        	request.setAttribute("message", "Failed to insert data.");
+        	
+        } catch (DuplicateGarageException e) {
+        	request.setAttribute("message", "Failed to insert data: " + e.getMessage());
+        	
+		} catch (SQLException e) {
+        	request.setAttribute("message", "Failed to insert data: " + e.getMessage());
+		}
         
         request.getRequestDispatcher("insertData.jsp").forward(request, response);
        
