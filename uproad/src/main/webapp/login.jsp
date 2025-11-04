@@ -30,12 +30,13 @@
         .input-field {
             width: 100%;
             padding: 10px;
-            margin: 10px 0;
+            /* margin: 10px 0; */
+            margin-bottom: 15px;
             border: 1px solid #ccc;
             border-radius: 4px;
             box-sizing: border-box;
         }
-        .login-button, .signup-button {
+        .login-button, .signup-button, .forgotPass-button {
             width: 100%;
             padding: 10px;
             background-color: #4CAF50;
@@ -44,29 +45,26 @@
             border-radius: 4px;
             cursor: pointer;
         }
-        .login-button:hover, .signup-button:hover {
+        .login-button:hover, .signup-button:hover, .forgotPass-button:hover {
             background-color: #45a049;
         }
-        .signup-link {
+        .signup-link, .forgotPass-link {
             color: #007bff;
             text-decoration: none;
             display: block;
             margin-top: 10px;
             cursor: pointer;
         }
-        .signup-link:hover {
+        .signup-link:hover .forgotPass-link:hover {
             text-decoration: underline;
-        }
-        .error-message {
-            color: red;
-            font-size: 12px;
-            margin-top: 10px;
         }
         
         /* Sign-up Popup Modal */
         .modal {
             display: none;
-            position: absolute;
+            position: fixed;
+            align-content:center;
+            overflow-y: auto;
             z-index: 1;
             left: 0;
             top: 0;
@@ -82,6 +80,7 @@
             width: 350px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
             text-align: left;
+            
         }
         .close {
             float: right;
@@ -97,12 +96,13 @@
         }
 
         .success-message {
+        	padding: 3px;
             background-color: #d4edda;  /* Green for success */
             color: #155724;              /* Dark green text */
         }
 
         .error-message {
-        	padding: 5px;
+        	padding: 3px;
             background-color: #f8d7da;  /* Red for error */
             color: #721c24;              /* Dark red text */
         }
@@ -112,17 +112,19 @@
 
 <div class="login-container">
 
-	<!-- Display success or failure message -->
-    <c:if test="${not empty message}">
-        <div class="message 
-            <c:choose>
-                <c:when test="${message == 'Successfully Registered. Please Login.'}">success-message</c:when>
-                <c:otherwise>error-message</c:otherwise>
-            </c:choose>
-        ">
-            ${message}
-        </div>
-    </c:if>
+    <!-- Success message -->
+	<c:if test="${not empty message}">
+	    <div class="message success-message">
+	        ${message}
+	    </div>
+	</c:if>
+	
+	<!-- Error message -->
+	<c:if test="${not empty error}">
+	    <div class="message error-message">
+	        ${error}
+	    </div>
+	</c:if>
         
     <h2>Login</h2>
     <form action="/uproad/LoginServlet" method="POST">
@@ -131,17 +133,29 @@
         <button type="submit" class="login-button">Login</button>
     </form>
 
+	<!-- Forgot Password link -->
+	<a class="forgotPass-link" onclick="openForgotPassModal()">Forgot Password?</a>
+
     <!-- Sign-up link -->
     <a class="signup-link" onclick="openSignupModal()">New User? Sign Up</a>
 
-    <%-- Display login error message if exists --%>
-    <% 
-        String errorMessage = (String) request.getAttribute("errorMessage");
-        if (errorMessage != null) { 
-    %>
-        <div class="error-message"><%= errorMessage %></div>
-    <% } %>
 </div>
+
+<!-- Forgot-Password Modal -->
+<div id="forgotPassModal" class="modal">
+
+	<div class="modal-content">
+		<span class="close" onclick="closeForgotPassModal()">&times;</span>
+		<h2>Forgot Password</h2>
+		
+		<form action="/uproad/forgotPassword" method="POST">
+			<input type="email" name="email" class="input-field" placeholder="Enter your email" required />
+			<button type="submit" class="forgotPass-button">Send Reset Link</button>
+		</form>
+		
+	</div>
+</div>
+
 
 <!-- Sign-up Modal -->
 <div id="signupModal" class="modal">
@@ -157,8 +171,8 @@
             <label for="telephone">Telephone Number:</label>
             <input type="text" name="telephone" class="input-field" required>
 
-            <label for="idNumber">ID Number (Username):</label>
-            <input type="text" name="idNumber" class="input-field" required>
+            <label for="email">Email (Username):</label>
+            <input type="text" name="email" class="input-field" required>
             
             <label for="password">Password:</label>
             <input type="password" id="password" name="password" class="input-field" required>
@@ -222,6 +236,14 @@
         document.getElementById("signupModal").style.display = "none";
     }
 
+    function openForgotPassModal() {
+    	document.getElementById("forgotPassModal").style.display = "block";
+	}
+    
+    function closeForgotPassModal() {
+    	document.getElementById("forgotPassModal").style.display = "none";
+	}
+    
     function validatePassword() {
         var password = document.getElementById("password").value;
         var confirmPassword = document.getElementById("confirmPassword").value;

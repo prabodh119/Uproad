@@ -2,7 +2,12 @@ package api;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.PrintWriter;
+
+import org.json.JSONException;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import dao.User;
 import dbc.DBConnection;
@@ -32,65 +37,115 @@ public class ApiLoginServlet extends HttpServlet {
 	/**
 	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
 	 */
-	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		
-		response.setContentType("application/json");
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        Logger logger = LoggerFactory.getLogger(ApiLoginServlet.class);
+
+        response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
-        
+
+        JSONObject resJson = new JSONObject();
+        PrintWriter out = response.getWriter();
+
         try {
-            // Read JSON body from Android request
-        	// Read JSON body from request
+            // 1️ Read and validate JSON body
             StringBuilder sb = new StringBuilder();
-            String line;
             try (BufferedReader reader = request.getReader()) {
+                String line;
                 while ((line = reader.readLine()) != null) {
                     sb.append(line);
                 }
             }
-        	
+
+            if (sb.length() == 0) {
+                throw new IllegalArgumentException("Empty request body");
+            }
+
             JSONObject reqJson = new JSONObject(sb.toString());
-            
-            String username = reqJson.getString("username");
-            String password = reqJson.getString("password");
 
-            // Validate against DB
+            // 2️ Extract input fields
+            String username = reqJson.optString("username", "").trim();
+            String password = reqJson.optString("password", "").trim();
+
+            if (username.isEmpty() || password.isEmpty()) {
+                throw new IllegalArgumentException("Username or password cannot be empty");
+            }
+
+            logger.info("Login attempt for username: {}", username);
+
+            // 3️ Validate credentials against DB
             DBConnection dbc = new DBConnection();
-            User loggedInUser = dbc.isValidUser(username, password);
+            User loggedInUser;
+            try {
+                loggedInUser = dbc.isValidUser(username, password);
+            } catch (Exception dbEx) {
+                logger.error("Database error during login for user {}: {}", username, dbEx.getMessage());
+                throw new RuntimeException("Internal server error during login");
+            }
 
+            // 4️ Build response
             if (loggedInUser != null) {
-            	// ✅ Generate JWT token
-                String token = TokenUtil.generateToken(loggedInUser.getUsername());
-                
-                JSONObject resJson = new JSONObject();
-                
+                // Generate JWT token
+                String token;
+                try {
+                    token = TokenUtil.generateToken(loggedInUser.getUsername());
+                } catch (Exception tokenEx) {
+                    logger.error("Token generation failed for user {}: {}", username, tokenEx.getMessage());
+                    throw new RuntimeException("Failed to generate authentication token");
+                }
+
                 resJson.put("success", true);
                 resJson.put("token", token);
                 resJson.put("username", loggedInUser.getUsername());
                 resJson.put("name", loggedInUser.getName());
-                
-                response.getWriter().write(resJson.toString());
+                response.setStatus(HttpServletResponse.SC_OK);
+
+                logger.info("Login successful for user: {}", username);
             } else {
-            	// ❌ Invalid credentials
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                
-                JSONObject resJson = new JSONObject();
                 resJson.put("success", false);
                 resJson.put("message", "Invalid username or password");
-                
-                response.getWriter().write(resJson.toString());
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                logger.warn("Login failed for username: {}", username);
             }
 
-        } catch (Exception e) {
-        	response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-        	
-            JSONObject resJson = new JSONObject();
+        } catch (IllegalArgumentException e) {
+            //  Client-side input errors
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             resJson.put("success", false);
-            resJson.put("message", "Invalid request format");
-            resJson.put("error", e.getMessage());
-            
-            response.getWriter().write(resJson.toString());
+            resJson.put("message", e.getMessage());
+            logger.warn("Bad login request: {}", e.getMessage());
+
+        } catch (JSONException e) {
+            //  JSON parsing issues
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resJson.put("success", false);
+            resJson.put("message", "Malformed JSON request");
+            logger.error("Malformed JSON in login request", e);
+
+        } catch (RuntimeException e) {
+            //  Controlled server-side issues
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            resJson.put("success", false);
+            resJson.put("message", e.getMessage());
+            logger.error("Application error during login", e);
+
+        } catch (Exception e) {
+            //  Unexpected errors
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            resJson.put("success", false);
+            resJson.put("message", "Unexpected error occurred");
+            logger.error("Unhandled exception in login API", e);
+
+        } finally {
+            //  Ensure consistent JSON response
+            out.write(resJson.toString());
+            out.flush();
+            out.close();
         }
     }
+
 
 
 	/**

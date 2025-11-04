@@ -8,6 +8,7 @@ import javax.servlet.http.HttpSession;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 import dao.User;
 import dbc.DBConnection;
@@ -35,21 +36,29 @@ public class LoginFilter implements Filter {
         HttpServletResponse httpResponse = (HttpServletResponse) response;
         HttpSession session = httpRequest.getSession(false); // Get session if it exists
 
+        //String resetLink = Config.getBaseUrl()+ "/resetPassword.jsp?token=";
+        //System.out.println(resetLink);
+        
         boolean isLoggedIn = session != null && session.getAttribute("userLoggedIn")!= null;
         
         String uri = httpRequest.getRequestURI();
-        //logger.info(uri);
-        if(isLoggedIn)
-        	logger.info("{} - {}", ((User) session.getAttribute("user")).getUsername(), uri);
-        else 
-        	logger.info(uri);
+
+        MDC.put("username", isLoggedIn ? ((User)session.getAttribute("user")).getUsername() : "");
+        
+        logger.info(uri);
        
         List<String> allowedPaths = Arrays.asList(
         		"/uproad/", 
+        		"/uproad/login.jsp",
+        		"/uproad/landing.html",
         		"/uproad/LoginServlet", 
         		"/uproad/SignupServlet", 
-        		"/uproad/landing.html", 
-        		"/uproad/login.jsp"
+        		"/uproad/verifyEmail",
+        		"/uproad/forgotPassword",
+        		"/uproad/ForgotPasswordServlet",
+        		"/uproad/resetPassword.jsp",
+        		"/uproad/ResetPasswordServlet",
+        		"/uproad/test.html"
         );
         
         // Allow static resources by file extension
@@ -59,11 +68,12 @@ public class LoginFilter implements Filter {
 
         // API request detection
         boolean isApiRequest = uri.startsWith("/uproad/api/");
-        boolean isPublicApi = uri.equals("/uproad/api/vehicleCategories");
-        boolean isLoginApi = uri.equals("/uproad/api/login");
+        boolean isPublicApi = uri.equals("/uproad/api/login") || uri.equals("/uproad/api/register") ||uri.equals("/uproad/api/vehicleCategories")
+        		|| uri.equals("/uproad/api/users/verify") || uri.equals("/uproad/api/forgotPassword") || uri.equals("/uproad/api/resetPassword");
+        //boolean isLoginApi = uri.equals("/uproad/api/login");
         
         if (isApiRequest) {
-            if (isLoginApi || isPublicApi) {
+            if (isPublicApi) {
                 // Login API is always allowed
             	chain.doFilter(request, response);
             } else {

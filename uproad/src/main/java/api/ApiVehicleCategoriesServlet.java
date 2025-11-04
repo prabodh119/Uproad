@@ -35,20 +35,8 @@ public class ApiVehicleCategoriesServlet extends HttpServlet {
         response.setCharacterEncoding("UTF-8");
         
         try (PrintWriter out = response.getWriter()) {
-			/*
-			 * String authHeader = request.getHeader("Authorization"); if (authHeader ==
-			 * null || !authHeader.startsWith("Bearer ")) {
-			 * response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-			 * out.write("{\"error\":\"Missing or invalid Authorization header\"}"); return;
-			 * }
-			 * 
-			 * String token = authHeader.substring(7); String username =
-			 * TokenUtil.validateToken(token); if (username == null) {
-			 * response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-			 * out.write("{\"error\":\"Invalid or expired token\"}"); return; }
-			 */
-
-            DBConnection dbc = new DBConnection();
+			
+        	DBConnection dbc = new DBConnection();
             List<VehicleCategory> categories = dbc.getVehicleCategory(); // implement in DBConnection
 
             JSONArray arr = new JSONArray();
@@ -59,7 +47,6 @@ public class ApiVehicleCategoriesServlet extends HttpServlet {
             }
             response.setStatus(HttpServletResponse.SC_OK);
             out.write(arr.toString());
-            System.out.println(arr.toString());
 
         } catch (Exception e) {
             e.printStackTrace();

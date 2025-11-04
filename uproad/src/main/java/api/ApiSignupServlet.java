@@ -3,6 +3,7 @@ package api;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.UUID;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -10,10 +11,18 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.mindrot.jbcrypt.BCrypt;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import dbc.DBConnection;
+import exc.DuplicateUserException;
+import exc.EmailException;
+import exc.UserDatabaseException;
+import util.Config;
+import util.EmailService;
 
 /**
  * Servlet implementation class ApiSignupServlet
@@ -46,13 +55,18 @@ public class ApiSignupServlet extends HttpServlet {
 	 */
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 	
+		Logger logger = LoggerFactory.getLogger(ApiSignupServlet.class);
+		
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
 
         PrintWriter out = response.getWriter();
+        
+        // Build JSON response
+        JSONObject resJson = new JSONObject();
 
         try {
-            // 🔹 Read JSON request body
+            // Read JSON request body
             StringBuilder sb = new StringBuilder();
             String line;
             try (BufferedReader reader = request.getReader()) {
@@ -63,43 +77,70 @@ public class ApiSignupServlet extends HttpServlet {
 
             JSONObject reqJson = new JSONObject(sb.toString());
 
-            // 🔹 Extract parameters from JSON
+            // Extract parameters from JSON
             String name = reqJson.getString("name");
             String telephone = reqJson.getString("telephone");
-            String idNumber = reqJson.getString("idNumber"); // Used as username
+            String email = reqJson.getString("email"); // Used as username
             String password = reqJson.getString("password");
             String vehicleMake = reqJson.getString("vehicleMake");
             String vehicleModel = reqJson.getString("vehicleModel");
             String vehicleYear = reqJson.getString("vehicleYear");
             String vehicleCategory = reqJson.getString("vehicleCategory");
+            
+            logger.info("Signup request received from app user : " + email);
 
-            // 🔹 Encrypt password
+            // Encrypt password
             String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt(12));
+            
+            // Generate token
+            String token = UUID.randomUUID().toString();
 
-            // 🔹 Save to database using your existing method
+            // Save to database using your existing method
             DBConnection dbc = new DBConnection();
-            int result = dbc.insertUser(idNumber, hashedPassword, telephone, name, vehicleMake, vehicleModel, vehicleYear, vehicleCategory);
+            dbc.insertUser(email, hashedPassword, telephone, name, vehicleMake, vehicleModel, vehicleYear, vehicleCategory, token);
 
-            // 🔹 Build JSON response
-            JSONObject resJson = new JSONObject();
-            if (result > 0) {
-                resJson.put("success", true);
-                resJson.put("message", "Successfully Registered. Please Login.");
-            } else {
-                resJson.put("success", false);
-                resJson.put("message", "Registration Failed!");
-            }
-
-            out.write(resJson.toString());
-
-        } catch (Exception e) {
+            String verifyLink = Config.getBaseUrl()+"/verifyEmail?token=" + token;
+            String verifyDeepLink = Config.getEmailVerifyDeeplink() + "?token=" + token;
+            
+            EmailService.sendVerificationEmail(email, verifyLink, verifyDeepLink);
+            
+            // Everything succeeded
+            resJson.put("success", true);
+            resJson.put("message", "Registration successful! Please check your email to verify your account.");
+            response.setStatus(HttpServletResponse.SC_OK);
+            logger.info("user registratoin successful for app user : "+email);
+            
+        } catch (DuplicateUserException e) {
+        	resJson.put("success", false);
+            resJson.put("message", e.getMessage());
+            response.setStatus(HttpServletResponse.SC_OK); 
             e.printStackTrace();
-            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            JSONObject error = new JSONObject();
-            error.put("success", false);
-            error.put("message", "Server Error: " + e.getMessage());
-            out.write(error.toString());
+
+        } catch (UserDatabaseException e) {
+            resJson.put("success", false);
+            resJson.put("message", "Database error: " + e.getMessage());
+            response.setStatus(HttpServletResponse.SC_OK);
+            e.printStackTrace();
+
+        }catch (EmailException e) {
+            resJson.put("success", false);
+            resJson.put("message", "User registered successfully, but failed to send verification email");
+            response.setStatus(HttpServletResponse.SC_OK); 
+            e.printStackTrace();
+
+        }  catch (JSONException e) {
+            resJson.put("success", false);
+            resJson.put("message", "Invalid JSON input: " + e.getMessage());
+            response.setStatus(HttpServletResponse.SC_OK);
+            e.printStackTrace();
+            
+        } catch (Exception e) {
+            resJson.put("success", false);
+            resJson.put("message", "Unexpected server error: " + e.getMessage());
+            response.setStatus(HttpServletResponse.SC_OK);
+            e.printStackTrace();
         }
+        out.write(resJson.toString());
     }
 
 }

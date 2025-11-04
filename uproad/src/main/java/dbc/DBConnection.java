@@ -19,11 +19,14 @@ import dao.User;
 import dao.VehicleCategory;
 import dao.VehicleDetail;
 import exc.DuplicateGarageException;
+import exc.DuplicateUserException;
+import exc.UserDatabaseException;
+import util.Config;
 
 public class DBConnection {
 	
 	public Connection connect() {
-       String url = "jdbc:sqlite:C:/sqlite/db/testdb.db";
+       String url = Config.getDblink();
        //String url = "jdbc:sqlite:/opt/tomcat/uproad/db/testdb.db";
 
         try {
@@ -127,7 +130,7 @@ public class DBConnection {
 		return null;
 	}
 	
-	public int insertUser(String username, String password, String telephone, String name, String make, String model, String year, String vehicleCategory) {
+	public int _insertUser(String username, String password, String telephone, String name, String make, String model, String year, String vehicleCategory) {
 		int result = 0;
 		Statement stmt = null;
 		ResultSet rs = null;
@@ -191,6 +194,163 @@ public class DBConnection {
         }
 		
 		return result;
+	}
+	
+	public int insertUser(String username, String password, String telephone, String name, String make, String model, String year, String vehicleCategory, String token) 
+			throws UserDatabaseException, DuplicateUserException {
+		int result = 0;
+		Connection con = null;
+
+		try {
+			con = connect();
+			con.setAutoCommit(false);
+
+			// 1) Generate user index
+			int nextUserIndex = 1;
+			String userIndexSql = "SELECT COALESCE(MAX([index]), 0) + 1 FROM user";
+			try (Statement stmt = con.createStatement(); ResultSet rs = stmt.executeQuery(userIndexSql)) {
+				if (rs.next()) {
+					nextUserIndex = rs.getInt(1);
+				}
+			}
+
+			// 2) Insert into user
+			String userSql = "INSERT INTO user ([index], username, password, telephone, is_enabled, is_admin, registered_date, name, verification_token, is_verified) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+			try (PreparedStatement pstmt = con.prepareStatement(userSql)) {
+				pstmt.setInt(1, nextUserIndex);
+				pstmt.setString(2, username);
+				pstmt.setString(3, password);
+				pstmt.setString(4, telephone);
+				pstmt.setInt(5, 1); // is_enabled
+				pstmt.setInt(6, 0); // is_admin
+				pstmt.setString(7, LocalDateTime.now().toString());
+				pstmt.setString(8, name);
+				pstmt.setString(9, token);
+				pstmt.setInt(10, 0);
+				pstmt.executeUpdate();
+			}
+
+			// 3) Generate vehicle_id (separate from user index)
+			int nextVehicleId = 1;
+			String vehicleIndexSql = "SELECT COALESCE(MAX([index]), 0) + 1 FROM vehicle_details";
+			try (Statement stmt = con.createStatement(); ResultSet rs = stmt.executeQuery(vehicleIndexSql)) {
+				if (rs.next()) {
+					nextVehicleId = rs.getInt(1);
+				}
+			}
+
+			// 4) Insert initial vehicle
+			String vehicleSql = "INSERT INTO vehicle_details ([index], username, make, model, year, vehicle_category) VALUES (?, ?, ?, ?, ?, ?)";
+			try (PreparedStatement pstmt = con.prepareStatement(vehicleSql)) {
+				pstmt.setInt(1, nextVehicleId);
+				pstmt.setString(2, username);
+				pstmt.setString(3, make);
+				pstmt.setString(4, model);
+				pstmt.setString(5, year);
+				pstmt.setString(6, vehicleCategory);
+				pstmt.executeUpdate();
+			}
+
+			con.commit();
+			result = 1;
+
+		} catch (SQLException e) {
+			if (con != null) {
+				try {
+					con.rollback();
+				} catch (SQLException ignored) {}
+				
+				// Duplicate constraint (usually SQLState 23000)
+		        if ("23000".equals(e.getSQLState()) || e.getMessage().toLowerCase().contains("primary key constraint failed")) {
+		            throw new DuplicateUserException("User with this email or username already exists.");
+		        }
+
+		        // Generic DB exception
+		        throw new UserDatabaseException("Database error occurred while inserting user.", e);
+			}
+
+		} finally {
+			try {
+				if (con != null)
+					con.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+
+		return result;
+	}
+	
+	public boolean verifyUser(String token) {
+        try (Connection con = connect()) {
+            String sql = "UPDATE user SET is_verified = 1, verification_token = NULL WHERE verification_token = ?";
+            PreparedStatement ps = con.prepareStatement(sql);
+            ps.setString(1, token);
+            int rows = ps.executeUpdate();
+            return rows > 0;
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+	public boolean isVerified(String email) {
+        try (Connection con = connect()) {
+            String sql = "SELECT is_verified FROM users WHERE email = ?";
+            PreparedStatement ps = con.prepareStatement(sql);
+            ps.setString(1, email);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) return rs.getInt("is_verified") == 1;
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+	
+	public boolean saveResetToken(String email, String token, String expiry) {
+	    String sql = "UPDATE user SET reset_token = ?, reset_expiry = ? WHERE username = ?";
+	    try (Connection conn = connect();
+	         PreparedStatement pstmt = conn.prepareStatement(sql)) {
+	        pstmt.setString(1, token);
+	        pstmt.setString(2, expiry);
+	        pstmt.setString(3, email);
+	        return pstmt.executeUpdate() > 0;
+	    } catch (SQLException e) {
+	        e.printStackTrace();
+	        return false;
+	    }
+	}
+
+	public boolean isValidResetToken(String token) {
+	    String sql = "SELECT reset_expiry FROM user WHERE reset_token = ?";
+	    try (Connection conn = connect();
+	         PreparedStatement pstmt = conn.prepareStatement(sql)) {
+	        pstmt.setString(1, token);
+	        ResultSet rs = pstmt.executeQuery();
+	        if (rs.next()) {
+	            String expiry = rs.getString("reset_expiry");
+	            LocalDateTime expTime = LocalDateTime.parse(expiry);
+	            return LocalDateTime.now().isBefore(expTime);
+	        }
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    }
+	    return false;
+	}
+
+	public boolean updatePasswordWithToken(String token, String hashedPassword) {
+	    String sql = "UPDATE user SET password = ?, reset_token = NULL, reset_expiry = NULL WHERE reset_token = ?";
+	    try (Connection conn = connect();
+	         PreparedStatement pstmt = conn.prepareStatement(sql)) {
+	        pstmt.setString(1, hashedPassword);
+	        pstmt.setString(2, token);
+	        return pstmt.executeUpdate() > 0;
+	    } catch (SQLException e) {
+	        e.printStackTrace();
+	        return false;
+	    }
 	}
 	
 	public ArrayList<Garage> getGarageByCity(String city) {
@@ -632,10 +792,29 @@ public class DBConnection {
 		return result;
 	}
 	
-	public void insertGarageData(String name, String address, String contact_no, String contact_2, String contact_3, String near_city, String highway, String website, String vehicle, String services, String field12, String field13, String field14, String field15) throws SQLException, DuplicateGarageException{
+	public void insertGarageData(String name, String address, String contact_no, String contact_2, String contact_3, String near_city, String highway, String website, String vehicle, String services, String field12, String field13, String field14, String field15) 
+			throws SQLException, DuplicateGarageException{
 		
-		String duplicateCheckSQL = "SELECT 1 FROM garage WHERE name = ? AND (contact_no IN (?, ?, ?) OR contact_2 IN (?, ?, ?)  OR contact_3 IN (?, ?, ?)) LIMIT 1";
+		String duplicateCheckSQL = "SELECT 1 FROM garage WHERE name = ?";
+		
+		List<String> contactList = new ArrayList<>();
 
+	    if (contact_no != null && !contact_no.trim().isEmpty()) contactList.add(contact_no.trim());
+	    if (contact_2 != null && !contact_2.trim().isEmpty()) contactList.add(contact_2.trim());
+	    if (contact_3 != null && !contact_3.trim().isEmpty()) contactList.add(contact_3.trim());
+
+	    if (!contactList.isEmpty()) {
+	    	
+	        StringBuilder sb = new StringBuilder(duplicateCheckSQL);
+	        sb.append(" AND (");
+	        for (int i = 0; i < contactList.size(); i++) {
+	            if (i > 0) sb.append(" OR ");
+	            sb.append("(contact_no = ? OR contact_2 = ? OR contact_3 = ?)");
+	        }
+	        sb.append(") LIMIT 1");
+	        duplicateCheckSQL = sb.toString();
+	    }
+	    
 	    String getMaxIndexSQL = "SELECT IFNULL(MAX([index]), 0) AS next_index FROM garage";
 
 	    String insertSQL = "INSERT INTO garage ([index], name, address, contact_no, contact_2, contact_3, near_city, highway, website, vehicle_category, services, field12, field13, field14, field15) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
@@ -646,24 +825,24 @@ public class DBConnection {
 	        con.setAutoCommit(false);
 
 	        // 1. Check duplicates
-	        try (PreparedStatement psCheck = con.prepareStatement(duplicateCheckSQL)) {
-	            psCheck.setString(1, name);
-	            psCheck.setString(2, contact_no);
-	            psCheck.setString(3, contact_2);
-	            psCheck.setString(4, contact_3);
-	            psCheck.setString(5, contact_no);
-	            psCheck.setString(6, contact_2);
-	            psCheck.setString(7, contact_3);
-	            psCheck.setString(8, contact_no);
-	            psCheck.setString(9, contact_2);
-	            psCheck.setString(10, contact_3);
-
-	            try (ResultSet rs = psCheck.executeQuery()) {
-	                if (rs.next()) {
-	                    con.rollback();
-	                    throw new DuplicateGarageException("Duplicate contact found for garage: " + name);
+	        if (!contactList.isEmpty()) {
+		        try (PreparedStatement psCheck = con.prepareStatement(duplicateCheckSQL)) {
+		        	int i = 1;
+	                psCheck.setString(i++, name);
+	                
+	                for (String c : contactList) {
+	                    psCheck.setString(i++, c);
+	                    psCheck.setString(i++, c);
+	                    psCheck.setString(i++, c);
 	                }
-	            }
+	
+		            try (ResultSet rs = psCheck.executeQuery()) {
+		                if (rs.next()) {
+		                    con.rollback();
+		                    throw new DuplicateGarageException("Duplicate contact found for garage: " + name);
+		                }
+		            }
+		        }
 	        }
 
 	        // 2. Get next [index] safely
@@ -767,14 +946,28 @@ public class DBConnection {
 	        String field15
 	) throws SQLException, DuplicateGarageException {
 
-	    String duplicateCheckSQL = "SELECT 1 FROM garage " +
-	            "WHERE name = ? " +
-	            "AND [index] != ? " + // Exclude the current row
-	            "AND (contact_no IN (?, ?, ?) " +
-	            " OR contact_2 IN (?, ?, ?) " +
-	            " OR contact_3 IN (?, ?, ?)) " +
-	            "LIMIT 1";
+	    // Base duplicate check (will dynamically add contact filters)
+	    String duplicateCheckSQL = "SELECT 1 FROM garage WHERE name = ? AND [index] != ?";
+	    
+	    // Prepare list of non-empty contact numbers
+	    List<String> contactList = new ArrayList<>();
+	    if (contact_no != null && !contact_no.trim().isEmpty()) contactList.add(contact_no.trim());
+	    if (contact_2 != null && !contact_2.trim().isEmpty()) contactList.add(contact_2.trim());
+	    if (contact_3 != null && !contact_3.trim().isEmpty()) contactList.add(contact_3.trim());
 
+	    // Add dynamic contact conditions if any contacts are provided
+	    if (!contactList.isEmpty()) {
+	    	
+	    	StringBuilder sb = new StringBuilder(duplicateCheckSQL);
+	        sb.append(" AND (");
+	        for (int i = 0; i < contactList.size(); i++) {
+	            if (i > 0) sb.append(" OR ");
+	            sb.append("(contact_no = ? OR contact_2 = ? OR contact_3 = ?)");
+	        }
+	        sb.append(") LIMIT 1");
+	        duplicateCheckSQL = sb.toString();
+	    }
+	    
 	    String updateSQL = "UPDATE garage SET " +
 	            "name = ?, address = ?, contact_no = ?, contact_2 = ?, contact_3 = ?, " +
 	            "near_city = ?, highway = ?, website = ?, vehicle_category = ?, services = ?, " +
@@ -787,25 +980,26 @@ public class DBConnection {
 	        con.setAutoCommit(false);
 
 	        // 1. Check duplicates excluding current row
-	        try (PreparedStatement psCheck = con.prepareStatement(duplicateCheckSQL)) {
-	            psCheck.setString(1, name);
-	            psCheck.setInt(2, index); // exclude current record
-	            psCheck.setString(3, contact_no);
-	            psCheck.setString(4, contact_2);
-	            psCheck.setString(5, contact_3);
-	            psCheck.setString(6, contact_no);
-	            psCheck.setString(7, contact_2);
-	            psCheck.setString(8, contact_3);
-	            psCheck.setString(9, contact_no);
-	            psCheck.setString(10, contact_2);
-	            psCheck.setString(11, contact_3);
+	        if (!contactList.isEmpty()) {
+		        try (PreparedStatement psCheck = con.prepareStatement(duplicateCheckSQL)) {
+		        	int i = 1;
+	                psCheck.setString(i++, name);
+	                psCheck.setInt(i++, index);
 
-	            try (ResultSet rs = psCheck.executeQuery()) {
-	                if (rs.next()) {
-	                    con.rollback();
-	                    throw new DuplicateGarageException("Duplicate contact found for garage: " + name);
+	                // Add each contact 3 times (for contact_no, contact_2, contact_3)
+	                for (String c : contactList) {
+	                    psCheck.setString(i++, c);
+	                    psCheck.setString(i++, c);
+	                    psCheck.setString(i++, c);
 	                }
-	            }
+	
+		            try (ResultSet rs = psCheck.executeQuery()) {
+		                if (rs.next()) {
+		                    con.rollback();
+		                    throw new DuplicateGarageException("Duplicate contact found for garage: " + name);
+		                }
+		            }
+		        }
 	        }
 
 	        // 2. Perform the update
