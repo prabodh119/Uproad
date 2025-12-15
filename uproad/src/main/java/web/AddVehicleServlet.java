@@ -14,13 +14,13 @@ import dbc.DBConnection;
  * Servlet implementation class EditProfileServlet
  */
 @WebServlet("/EditProfileServlet")
-public class EditProfileServlet extends HttpServlet {
+public class AddVehicleServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
        
     /**
      * @see HttpServlet#HttpServlet()
      */
-    public EditProfileServlet() {
+    public AddVehicleServlet() {
         super();
         // TODO Auto-generated constructor stub
     }
@@ -33,15 +33,16 @@ public class EditProfileServlet extends HttpServlet {
         String vehicleMake = request.getParameter("vehicleMake");
         String vehicleModel = request.getParameter("vehicleModel");
         String vehicleYear = request.getParameter("vehicleYear");
-        String vehicleCategory = request.getParameter("vehicleCategory"); // New dropdown selection
+        String vehicleCategory = request.getParameter("vehicleCategory");
+        String vehicleNickname = request.getParameter("vehicleNickname");// New dropdown selection
         
         User loggedInUser = (User) request.getSession().getAttribute("user");
         String username = loggedInUser.getUsername();
         
-        int result = new DBConnection().insertVehicleDetail(username, vehicleMake, vehicleModel, vehicleYear, vehicleCategory);
+        int result = new DBConnection().insertVehicleDetail(username, vehicleMake, vehicleModel, vehicleYear, vehicleCategory, vehicleNickname);
         
         if(result > 0) {
-        	request.setAttribute("message", "Garage information successfully inserted.");
+        	request.setAttribute("message", "Vehicle Details successfully inserted.");
         	User loggInUser = new DBConnection().getUserByUsername(username);
         	request.getSession().setAttribute("user", loggInUser);
         	response.sendRedirect("userProfile.jsp");

@@ -16,9 +16,10 @@ public class Garage {
 	String Field13;
 	String Field14;
 	String Field15;
+	float avg_rating;
 	
 	public Garage(int index, String name, String address, String contactNo, String contactNo2, String contactNo3,
-			String nearCity, String road, String website, String vehicle_category, String services, String field12, String field13, String field14, String field15) {
+			String nearCity, String road, String website, String vehicle_category, String services, String field12, String field13, String field14, String field15, float avg_rating) {
 		super();
 		this.index = index;
 		this.name = name;
@@ -35,6 +36,7 @@ public class Garage {
 		this.Field13 = field13;
 		this.Field14 = field14;
 		this.Field15 = field15;
+		this.avg_rating = avg_rating;
 	}
 
 	public int getIndex() {
@@ -155,6 +157,14 @@ public class Garage {
 
 	public void setField15(String field15) {
 		Field15 = field15;
+	}
+
+	public float getAvg_rating() {
+		return avg_rating;
+	}
+
+	public void setAvg_rating(float avg_rating) {
+		this.avg_rating = avg_rating;
 	}
 	
 }

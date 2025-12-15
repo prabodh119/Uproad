@@ -12,14 +12,14 @@
                   %X{username} = MDC/ThreadContext variable
                   %m    = message
                 -->
-                <Pattern>%d{yyyy-MM-dd HH:mm:ss} [%t] %-5p %c{1} [user:%X{username}] - %m%n</Pattern>
+                <Pattern>%d{yyyy-MM-dd HH:mm:ss} [%t] %-5p %c{1} [user:%X{username}] [src:%X{source}] - %m%n</Pattern>
             </PatternLayout>
         </Console>
 
         <!-- Optional file appender -->
         <File name="FileLog" fileName="/opt/tomcat/uproad/logs/app.log" append="true">
             <PatternLayout>
-                <Pattern>%d{yyyy-MM-dd HH:mm:ss} [%t] %-5p %c{1} [user:%X{username}] - %m%n</Pattern>
+                <Pattern>%d{yyyy-MM-dd HH:mm:ss} [%t] %-5p %c{1} [user:%X{username}] [src:%X{source}] - %m%n</Pattern>
             </PatternLayout>
         </File>
     </Appenders>

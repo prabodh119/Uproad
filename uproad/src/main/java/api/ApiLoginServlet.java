@@ -106,7 +106,7 @@ public class ApiLoginServlet extends HttpServlet {
             } else {
                 resJson.put("success", false);
                 resJson.put("message", "Invalid username or password");
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.setStatus(HttpServletResponse.SC_OK);
                 logger.warn("Login failed for username: {}", username);
             }
 

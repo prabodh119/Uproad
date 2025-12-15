@@ -239,7 +239,7 @@
             <span class="close" onclick="closeModal()">&times;</span>
             <h3>Add Vehicle</h3>
             
-            <form action="/uproad/EditProfileServlet" method="POST">
+            <form action="/uproad/AddVehicleServlet" method="POST">
                 <input type="text" name="vehicleMake" class="input-field" placeholder="Vehicle Make" required><br>
                 <input type="text" name="vehicleModel" class="input-field" placeholder="Vehicle Model" required><br>
                 <input type="text" name="vehicleYear" class="input-field" placeholder="Vehicle Year" required><br>

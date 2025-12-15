@@ -8,10 +8,11 @@ public class User {
 	String regDate;
 	int enabled;
 	int admin;
+	String telephone;
 	String name;
 	ArrayList<VehicleDetail> vehicles;
 	
-	public User(String username, String password, String regDate, int isEnabled, int isAdmin, String name, ArrayList<VehicleDetail> vehicles) {
+	public User(String username, String password, String regDate, int isEnabled, int isAdmin, String name, String telephone, ArrayList<VehicleDetail> vehicles) {
 		super();
 		this.username = username;
 		this.password = password;
@@ -19,6 +20,7 @@ public class User {
 		this.enabled = isEnabled;
 		this.admin = isAdmin;
 		this.name = name;
+		this.telephone = telephone;
 		this.vehicles = vehicles;
 	}
 
@@ -69,6 +71,14 @@ public class User {
 	public void setAdmin(int admin) {
 		this.admin = admin;
 	}
+	
+	public String getTelephone() {
+		return telephone;
+	}
+
+	public void setTelephone(String telephone) {
+		this.telephone = telephone;
+	}
 
 	public ArrayList<VehicleDetail> getVehicles() {
 		return vehicles;
@@ -77,7 +87,5 @@ public class User {
 	public void setVehicles(ArrayList<VehicleDetail> vehicles) {
 		this.vehicles = vehicles;
 	}
-	
-	
 	
 }
