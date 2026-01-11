@@ -70,12 +70,12 @@ public class AdminSearchServlet extends HttpServlet {
 			String field13 = request.getParameter("field13");
 			
 			// Convert arrays to comma-separated strings
-	        String vehicleCategoryStr = (vehicleCategories != null) ? String.join(", ", vehicleCategories) : "";
-	        String servicesProvidedStr = (servicesProvided != null) ? String.join(", ", servicesProvided) : "";
+	        String vehicleCategoryStr = (vehicleCategories != null) ? String.join(", ", vehicleCategories) : "None";
+	        String servicesProvidedStr = (servicesProvided != null) ? String.join(", ", servicesProvided) : "None";
 			
 	        DBConnection dbc = new DBConnection();
 	        try {
-	        	dbc.editRecord(index, name, address, contact, contact2, contact3, city, highway, website, vehicleCategoryStr, servicesProvidedStr, field12, field13, "", "");
+	        	dbc.editRecord(index, name, address, contact, contact2, contact3, city, highway, website, vehicleCategoryStr, servicesProvidedStr, field12, field13, null, null);
 	        	request.setAttribute("message", "Data updated successfully!");
 	        	
 	        } catch (DuplicateGarageException e) {
@@ -137,18 +137,19 @@ public class AdminSearchServlet extends HttpServlet {
 		for (Garage garage : garageList) {
 			results.add(new String[]{
 					String.valueOf(garage.getIndex()), 
-					garage.getName(), 
-					garage.getAddress(), 
-					garage.getField13(),
-					garage.getContactNo(), 
-					garage.getContactNo2(), 
-					garage.getContactNo3() ,
-					garage.getNearCity(), 
-					garage.getRoad(),
-					garage.getWebsite(),
-					garage.getVehicle_category(),
-					garage.getServices(),
-					garage.getField12()
+					nullCheckCorrect(garage.getName()), 
+					nullCheckCorrect(garage.getAddress()), 
+					nullCheckCorrect(garage.getField13()),
+					nullCheckCorrect(garage.getContactNo()), 
+					nullCheckCorrect(garage.getContactNo2()), 
+					nullCheckCorrect(garage.getContactNo3()),
+					nullCheckCorrect(garage.getNearCity()), 
+					nullCheckCorrect(garage.getRoad()),
+					nullCheckCorrect(garage.getWebsite()),
+					nullCheckCorrect(garage.getVehicle_category()),
+					nullCheckCorrect(garage.getServices()),
+					nullCheckCorrect(garage.getField12()),
+					String.valueOf(garage.getAvg_rating())
 			});
 		}
 		
@@ -163,6 +164,10 @@ public class AdminSearchServlet extends HttpServlet {
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		// TODO Auto-generated method stub
 		doGet(request, response);
+	}
+	
+	private String nullCheckCorrect(String value) {
+	    return value == null ? "" : value;
 	}
 
 }

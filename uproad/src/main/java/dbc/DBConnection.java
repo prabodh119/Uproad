@@ -852,7 +852,7 @@ public class DBConnection {
 		return result;
 	}
 	
-	public void insertGarageData (
+	public void __insertGarageData (
 			String name, 
 			String address, 
 			String contact_no, 
@@ -945,6 +945,103 @@ public class DBConnection {
 	            psInsert.setString(13, field13);
 	            psInsert.setString(14, field14);
 	            psInsert.setString(15, field15);
+
+	            psInsert.executeUpdate();
+	        }
+
+	        // Commit transaction
+	        con.commit();
+
+	    } catch (SQLException e) {
+	        e.printStackTrace();
+	        throw e; // rethrow so caller can handle
+	    }
+        
+		
+	}
+	
+	public void insertGarageData (
+			String name, 
+			String address, 
+			String contact_no, 
+			String contact_2, 
+			String contact_3,
+			String near_city, 
+			String highway, 
+			String website, 
+			String vehicle, 
+			String services, 
+			String field12,
+			String field13, 
+			String field14, 
+			String field15
+		) throws SQLException, DuplicateGarageException {
+
+		String duplicateCheckSQL = "SELECT 1 FROM garage WHERE name = ?";
+		
+		List<String> contactList = new ArrayList<>();
+
+	    if (contact_no != null && !contact_no.trim().isEmpty()) contactList.add(contact_no.trim());
+	    if (contact_2 != null && !contact_2.trim().isEmpty()) contactList.add(contact_2.trim());
+	    if (contact_3 != null && !contact_3.trim().isEmpty()) contactList.add(contact_3.trim());
+
+	    if (!contactList.isEmpty()) {
+	    	
+	        StringBuilder sb = new StringBuilder(duplicateCheckSQL);
+	        sb.append(" AND (");
+	        for (int i = 0; i < contactList.size(); i++) {
+	            if (i > 0) sb.append(" OR ");
+	            sb.append("(contact_no = ? OR contact_2 = ? OR contact_3 = ?)");
+	        }
+	        sb.append(") LIMIT 1");
+	        duplicateCheckSQL = sb.toString();
+	    }
+	    
+	    String insertSQL = "INSERT INTO garage (name, address, contact_no, contact_2, contact_3, near_city, highway, website, vehicle_category, services, field12, field13, field14, field15) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+		
+	    try (Connection con = connect()) {
+
+	        // Start transaction
+	        con.setAutoCommit(false);
+
+	        // 1. Check duplicates
+	        if (!contactList.isEmpty()) {
+		        try (PreparedStatement psCheck = con.prepareStatement(duplicateCheckSQL)) {
+		        	int i = 1;
+	                psCheck.setString(i++, name);
+	                
+	                for (String c : contactList) {
+	                    psCheck.setString(i++, c);
+	                    psCheck.setString(i++, c);
+	                    psCheck.setString(i++, c);
+	                }
+	
+		            try (ResultSet rs = psCheck.executeQuery()) {
+		                if (rs.next()) {
+		                    con.rollback();
+		                    throw new DuplicateGarageException("Duplicate contact found for garage: " + name);
+		                }
+		            }
+		        }
+	        }
+
+
+	        // 3. Insert new garage
+	        try (PreparedStatement psInsert = con.prepareStatement(insertSQL)) {
+	            psInsert.setString(1, name);
+	            psInsert.setString(2, address);
+	            psInsert.setString(3, contact_no);
+	            psInsert.setString(4, contact_2);
+	            psInsert.setString(5, contact_3);
+	            psInsert.setString(6, near_city);
+	            psInsert.setString(7, highway);
+	            psInsert.setString(8, website);
+	            psInsert.setString(9, vehicle);
+	            psInsert.setString(10, services);
+	            psInsert.setString(11, field12);
+	            psInsert.setString(12, field13);
+	            psInsert.setString(13, field14);
+	            psInsert.setString(14, field15);
 
 	            psInsert.executeUpdate();
 	        }

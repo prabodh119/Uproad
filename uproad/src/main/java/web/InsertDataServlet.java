@@ -53,7 +53,7 @@ public class InsertDataServlet extends HttpServlet {
 
         DBConnection dbc = new DBConnection();
         try {
-        	dbc.insertGarageData(garageName, address, contactNumber, contactNumber2, contactNumber3, nearestCity, highway, website, vehicleCategoryStr, servicesProvidedStr, field12, field13, "", "");
+        	dbc.insertGarageData(garageName, address, contactNumber, contactNumber2, contactNumber3, nearestCity, highway, website, vehicleCategoryStr, servicesProvidedStr, field12, field13, null, null);
         	request.setAttribute("message", "Garage information successfully inserted.");
         	
         } catch (DuplicateGarageException e) {

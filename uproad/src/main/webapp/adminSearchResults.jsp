@@ -260,6 +260,7 @@
 					<th>Vehicle Category</th>
 					<th>Services Provided</th>
 					<th>Remarks</th>
+					<th>Rating</th>
 					<th>Actions</th> <!-- New Column for Buttons -->
 				</tr>
             </thead>
@@ -348,13 +349,13 @@
 	        <input type="text" id="editField13" name="field13"><br>
 	        
 	        <label for="contactNumber">Contact Number:</label>
-	        <input type="text" id="editContact" name="contact"><br>
+	        <input type="text" id="editContact" name="contact" inputmode="numeric" pattern="[0-9]{9,10}" required><br>
 	        
 	        <label for="contactNumber2">Contact Number 2:</label>
-	        <input type="text" id="editContact2" name="contact2"><br>
+	        <input type="text" id="editContact2" name="contact2" inputmode="numeric" pattern="[0-9]{9,10}"><br>
 	        
 	        <label for="contactNumber3">Contact Number 3:</label>
-	        <input type="text" id="editContact3" name="contact3"><br>
+	        <input type="text" id="editContact3" name="contact3" inputmode="numeric" pattern="[0-9]{9,10}"><br>
 	        
 	        <label for="nearestCity">Nearest City:</label>
 	        <input type="text" id="editCity" name="city"><br>
@@ -392,7 +393,7 @@
 			<input type="text" id="editField12" name="field12"><br>
 			 
 			<div class="popup-buttons">
-				<button type="submit" class="save-btn">Save Changes</button>
+				<button type="button" class="save-btn" onclick="confirmSubmission()">Save Changes</button>
 				<button type="button" class="cancel-btn" onclick="closeEditPopup()">Cancel</button>
 			</div>
 		</form>
@@ -440,9 +441,11 @@
 	        document.getElementById("editName").value = name;
 	        document.getElementById("editAddress").value = address;
 	        document.getElementById("editField13").value = field13;
+	        
 	        document.getElementById("editContact").value = contact;
 	        document.getElementById("editContact2").value = contact2;
 	        document.getElementById("editContact3").value = contact3;
+	        
 	        document.getElementById("editCity").value = city;
 	        document.getElementById("editHighway").value = highway;
 	        document.getElementById("editWebsite").value = website;
@@ -462,6 +465,89 @@
 	        document.getElementById("editField12").value = field12;
 	        document.getElementById("editPopup").style.display = "block";
 	    }
+    	
+    	function isValidPhone(value, required) {
+	        value = value.trim();
+	
+	        // If empty
+	        if (value === "") {
+	            return !required; // valid only if not required
+	        }
+	
+	        // Digits only
+	        if (!/^\d+$/.test(value)) {
+	            return false;
+	        }
+	
+	        // Length check
+	        return value.length === 9 || value.length === 10;
+	    }
+    	
+    	function confirmSubmission() {
+            var garageName = document.getElementById("editName").value.trim();
+            var address = document.getElementById("editAddress").value.trim();
+            var location = document.getElementById("editField13").value.trim();
+            
+            var contactNumber = document.getElementById("editContact").value.trim();
+            var contactNumber2 = document.getElementById("editContact2").value.trim();
+            var contactNumber3 = document.getElementById("editContact3").value.trim();
+            
+            var nearestCity = document.getElementById("editCity").value.trim();
+            var highway = document.getElementById("editHighway").value.trim();
+            var website = document.getElementById("editWebsite").value.trim();
+            
+            const vehicles = document.querySelectorAll('#vehicleCategory input[type="checkbox"]');
+            const isChecked1 = Array.from(vehicles).some(checkbox => checkbox.checked);
+            const selectedVehicles = Array.from(vehicles).filter(checkbox => checkbox.checked).map(checkbox => checkbox.value);
+            
+            const services = document.querySelectorAll('#servicesProvided input[type="checkbox"]');
+            const isChecked2 = Array.from(services).some(checkbox => checkbox.checked);
+            const selectedServices = Array.from(services).filter(checkbox => checkbox.checked).map(checkbox => checkbox.value);
+            
+            var remarks = document.getElementById("editField12").value.trim(); 
+            
+            /* ---------- BASIC REQUIRED FIELD CHECK ---------- */
+            if (!garageName || !address || !nearestCity || !highway) {
+                alert("Please fill in all required fields.");
+                return;
+            }
+
+            /* ---------- PHONE VALIDATION ---------- */
+            if (!isValidPhone(contactNumber, true)) {
+                alert("Primary contact number must be 9 or 10 digits.");
+                return;
+            }
+
+            if (!isValidPhone(contactNumber2, false)) {
+                alert("Contact Number 2 must be 9 or 10 digits if provided.");
+                return;
+            }
+
+            if (!isValidPhone(contactNumber3, false)) {
+                alert("Contact Number 3 must be 9 or 10 digits if provided.");
+                return;
+            }
+            
+            var confirmMessage = "Are you sure you want to submit the following data?\n\n";
+            confirmMessage += "Garage Name: " + garageName + "\n";
+            confirmMessage += "Address: " + address + "\n";
+            confirmMessage += "Location: " + location + "\n";
+            confirmMessage += "Contact Number: " + contactNumber + "\n";
+            confirmMessage += "Contact Number 2: " + contactNumber2 + "\n";
+            confirmMessage += "Contact Number 3: " + contactNumber3 + "\n";
+            confirmMessage += "Nearest City: " + nearestCity + "\n";
+            confirmMessage += "Highway: " + highway + "\n";
+            confirmMessage += "Web site: " + website + "\n";
+            confirmMessage += "Vehicle Categories: " + selectedVehicles.join(', ') + "\n";
+            confirmMessage += "Services Provided: " + selectedServices.join(', ') + "\n";
+            confirmMessage += "Remarks: " + remarks + "\n";
+            
+            // Show confirmation popup
+            if (confirm(confirmMessage)) {
+                document.getElementById("editForm").submit();
+            }
+            
+        }
 	
 	    function closeEditPopup() {
 	        document.getElementById("editPopup").style.display = "none";
