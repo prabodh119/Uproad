@@ -35,7 +35,7 @@ public class SearchServlet extends HttpServlet {
 		// Retrieve user and vehicle details from request
         String username = request.getParameter("username");
         String selectedVehicle = request.getParameter("selectedVehicle");
-        String[] serviceTypes = request.getParameterValues("serviceType"); for (String string : serviceTypes) { System.out.println(string); }
+        String[] serviceTypes = request.getParameterValues("serviceType");
         //String serviceType = request.getParameter("serviceType");
         String nearestCity = request.getParameter("nearestCity");
 

@@ -1,6 +1,7 @@
 package web;
 
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import dao.Garage;
 import dao.User;
 import dbc.DBConnection;
+import exc.DuplicateGarageException;
 
 /**
  * Servlet implementation class SearchServlet
@@ -68,25 +70,43 @@ public class AdminSearchServlet extends HttpServlet {
 			String field13 = request.getParameter("field13");
 			
 			// Convert arrays to comma-separated strings
-	        String vehicleCategoryStr = (vehicleCategories != null) ? String.join(", ", vehicleCategories) : "";
-	        String servicesProvidedStr = (servicesProvided != null) ? String.join(", ", servicesProvided) : "";
+	        String vehicleCategoryStr = (vehicleCategories != null) ? String.join(", ", vehicleCategories) : "None";
+	        String servicesProvidedStr = (servicesProvided != null) ? String.join(", ", servicesProvided) : "None";
 			
-			int result = new DBConnection().editRecord(index, name, address, contact, contact2, contact3, city, highway, website, vehicleCategoryStr, servicesProvidedStr, field12, field13, null, null);
-			
-			if (result>0) request.setAttribute("message", "Data updated successfully!");
-			else request.setAttribute("message", "Update failed!");
-			
-			//searchType = "city";
-			//searchCriteria = city;
+	        DBConnection dbc = new DBConnection();
+	        try {
+	        	dbc.editRecord(index, name, address, contact, contact2, contact3, city, highway, website, vehicleCategoryStr, servicesProvidedStr, field12, field13, null, null);
+	        	request.setAttribute("message", "Data updated successfully!");
+	        	
+	        } catch (DuplicateGarageException e) {
+	        	logger.info("Failed to insert data: " + e.getMessage());
+	        	request.setAttribute("message", "Failed to update data: " + e.getMessage());
+	        	
+	        } catch (SQLException e) {
+	        	logger.info("Failed to insert data: " + e.getMessage());
+	        	request.setAttribute("message", "Failed to update data: " + e.getMessage());
+	        }
 					
 		} else if (action!= null && action.equals("delete")) {
 			logger.info("delete request");
 		
 			int id=Integer.parseInt(request.getParameter("index"));
-			boolean result = new DBConnection().deleteRecord(id);
 			
-			if(result) request.setAttribute("message", "Record deleted!");
-			else request.setAttribute("message", "Delete failed!");
+			DBConnection dbc = new DBConnection();
+			try {
+			    boolean deleted = dbc.deleteRecord(id);
+			    if (deleted) {
+			    	logger.info("Garage deleted successfully!");
+			        request.setAttribute("message", "Record deleted!");
+			    } else {
+			    	logger.info("Garage with index " + id + " not found.");
+			        request.setAttribute("message", "Delete failed! Record not found.");
+			    }
+			} catch (SQLException e) {
+				logger.info("Database error: " + e.getMessage());
+			    request.setAttribute("message", "Database error: " + e.getMessage());
+			}
+
 		}
 		
 		ArrayList<Garage> garageList = new ArrayList<Garage>();
@@ -106,6 +126,10 @@ public class AdminSearchServlet extends HttpServlet {
 			request.setAttribute("type", searchType);
 			request.setAttribute("criteria", searchCriteria);
 		
+		} else if (("phone").equals(searchType)) {
+			garageList= new DBConnection().getGarageByPhone(searchCriteria);
+			request.setAttribute("type", searchType);
+			request.setAttribute("criteria", searchCriteria);
 		} else 
 			garageList= new DBConnection().getAllGarage();
 		
@@ -113,18 +137,19 @@ public class AdminSearchServlet extends HttpServlet {
 		for (Garage garage : garageList) {
 			results.add(new String[]{
 					String.valueOf(garage.getIndex()), 
-					garage.getName(), 
-					garage.getAddress(), 
-					garage.getField13(),
-					garage.getContactNo(), 
-					garage.getContactNo2(), 
-					garage.getContactNo3() ,
-					garage.getNearCity(), 
-					garage.getRoad(),
-					garage.getWebsite(),
-					garage.getVehicle_category(),
-					garage.getServices(),
-					garage.getField12()
+					nullCheckCorrect(garage.getName()), 
+					nullCheckCorrect(garage.getAddress()), 
+					nullCheckCorrect(garage.getField13()),
+					nullCheckCorrect(garage.getContactNo()), 
+					nullCheckCorrect(garage.getContactNo2()), 
+					nullCheckCorrect(garage.getContactNo3()),
+					nullCheckCorrect(garage.getNearCity()), 
+					nullCheckCorrect(garage.getRoad()),
+					nullCheckCorrect(garage.getWebsite()),
+					nullCheckCorrect(garage.getVehicle_category()),
+					nullCheckCorrect(garage.getServices()),
+					nullCheckCorrect(garage.getField12()),
+					String.valueOf(garage.getAvg_rating())
 			});
 		}
 		
@@ -139,6 +164,10 @@ public class AdminSearchServlet extends HttpServlet {
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		// TODO Auto-generated method stub
 		doGet(request, response);
+	}
+	
+	private String nullCheckCorrect(String value) {
+	    return value == null ? "" : value;
 	}
 
 }

@@ -70,6 +70,7 @@ public class ApiUserProfileServlet extends HttpServlet {
             JSONObject json = new JSONObject();
             json.put("username", user.getUsername());
             json.put("name", user.getName());
+            json.put("telephone", user.getTelephone());
 
             // Vehicles
             JSONArray vehiclesArr = new JSONArray();
@@ -77,10 +78,12 @@ public class ApiUserProfileServlet extends HttpServlet {
             if (vehicles != null) {
                 for (VehicleDetail v : vehicles) {
                     JSONObject vJson = new JSONObject();
+                    vJson.put("id", v.getId());
                     vJson.put("make", v.getMake());
                     vJson.put("model", v.getModel());
                     vJson.put("year", v.getYear());
                     vJson.put("category", v.getVehicleCategory());
+                    vJson.put("nickname", v.getNickname());
                     vehiclesArr.put(vJson);
                 }
             }

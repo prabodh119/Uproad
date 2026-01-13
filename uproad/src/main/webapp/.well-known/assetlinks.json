@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.uproad.uproad_v02",
+      "sha256_cert_fingerprints": [
+        "FE:24:BC:6D:8E:B0:31:CB:86:62:86:34:02:F1:CC:FA:CB:38:DE:A7:97:3D:F0:41:2A:28:06:F5:0B:32:6F:A8"
+      ]
+    }
+  }
+]

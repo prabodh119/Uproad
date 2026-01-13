@@ -12,6 +12,8 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import dao.Garage;
 import dbc.DBConnection;
@@ -38,9 +40,11 @@ public class ApiSearchServlet extends HttpServlet {
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
+        
+        Logger logger = LoggerFactory.getLogger(ApiSearchServlet.class);
 
         try {
-            // ✅ 1. Validate JWT from Authorization header
+            // 1. Validate JWT from Authorization header
             String authHeader = request.getHeader("Authorization");
             if (authHeader == null || !authHeader.startsWith("Bearer ")) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -56,7 +60,7 @@ public class ApiSearchServlet extends HttpServlet {
                 return;
             }
 
-            // ✅ 2. Parse request JSON
+            // 2. Parse request JSON
             StringBuilder sb = new StringBuilder();
             String line;
             try (BufferedReader reader = request.getReader()) {
@@ -76,23 +80,25 @@ public class ApiSearchServlet extends HttpServlet {
                 serviceTypes[i] = serviceTypesJson.getString(i);
             }
             String nearestCity = reqJson.getString("nearestCity");
+            
+            logger.info("Garage serach request with parameters vehicle category:{}, search types:{}, nearest city:{}", vehicleCategory, serviceTypes, nearestCity);
 
-            // ✅ 3. Check token username matches request username
+            // 3. Check token username matches request username
             if (!username.equals(tokenUsername)) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.getWriter().write("{\"success\":false,\"message\":\"Username does not match token\"}");
                 return;
             }
 
-            // ✅ 4. Query DB
+            // 4. Query DB
             DBConnection dbc = new DBConnection();
             List<Garage> garages = dbc.getGaragebyServiceAndcity(username, vehicleCategory, serviceTypes, nearestCity);
 
-            // ✅ 5. Build JSON response
+            // 5. Build JSON response
             JSONArray garageArray = new JSONArray();
             for (Garage g : garages) {
                 JSONObject gj = new JSONObject();
-                gj.put("index", g.getIndex());
+                gj.put("id", g.getIndex());
                 gj.put("name", g.getName());
                 gj.put("address", g.getAddress());
                 gj.put("contact_no", g.getContactNo());
@@ -107,6 +113,7 @@ public class ApiSearchServlet extends HttpServlet {
                 gj.put("field13", g.getField13());
                 gj.put("field14", g.getField14());
                 gj.put("field15", g.getField15());
+                gj.put("avg_rating", g.getAvg_rating());
                 garageArray.put(gj);
             }
 
@@ -116,6 +123,7 @@ public class ApiSearchServlet extends HttpServlet {
 
             response.setStatus(HttpServletResponse.SC_OK);
             response.getWriter().write(resJson.toString());
+            logger.info("Garage search successful with results:{}", garages.size());
 
         } catch (Exception e) {
             e.printStackTrace();

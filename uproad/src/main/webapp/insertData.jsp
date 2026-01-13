@@ -132,19 +132,36 @@
         } 
     </style>
     <script type="text/javascript">
-	    
+	    function isValidPhone(value, required) {
+	        value = value.trim();
+	
+	        // If empty
+	        if (value === "") {
+	            return !required; // valid only if not required
+	        }
+	
+	        // Digits only
+	        if (!/^\d+$/.test(value)) {
+	            return false;
+	        }
+	
+	        // Length check
+	        return value.length === 9 || value.length === 10;
+	    }
 		
         // Function to confirm form submission
         function confirmSubmission() {
-            var garageName = document.getElementById("garageName").value;
-            var address = document.getElementById("address").value;
-            var location = document.getElementById("field13").value;
-            var contactNumber = document.getElementById("contactNumber").value;
-            var contactNumber2 = document.getElementById("contactNumber2").value;
-            var contactNumber3 = document.getElementById("contactNumber3").value;
-            var nearestCity = document.getElementById("nearestCity").value;
-            var highway = document.getElementById("highway").value;
-            var website = document.getElementById("website").value;
+            var garageName = document.getElementById("garageName").value.trim();
+            var address = document.getElementById("address").value.trim();
+            var location = document.getElementById("field13").value.trim();
+            
+            var contactNumber = document.getElementById("contactNumber").value.trim();
+            var contactNumber2 = document.getElementById("contactNumber2").value.trim();
+            var contactNumber3 = document.getElementById("contactNumber3").value.trim();
+            
+            var nearestCity = document.getElementById("nearestCity").value.trim();
+            var highway = document.getElementById("highway").value.trim();
+            var website = document.getElementById("website").value.trim();
             
             const vehicles = document.querySelectorAll('#vehicleCategory input[type="checkbox"]');
             const isChecked1 = Array.from(vehicles).some(checkbox => checkbox.checked);
@@ -154,31 +171,49 @@
             const isChecked2 = Array.from(services).some(checkbox => checkbox.checked);
             const selectedServices = Array.from(services).filter(checkbox => checkbox.checked).map(checkbox => checkbox.value);
             
-            var remarks = document.getElementById("field12").value; 
+            var remarks = document.getElementById("field12").value.trim(); 
             
-            // Check if all fields are filled
-            if (garageName && address && contactNumber && nearestCity && highway) {
-                var confirmMessage = "Are you sure you want to submit the following data?\n\n";
-                confirmMessage += "Garage Name: " + garageName + "\n";
-                confirmMessage += "Address: " + address + "\n";
-                confirmMessage += "Location: " + location + "\n";
-                confirmMessage += "Contact Number: " + contactNumber + "\n";
-                confirmMessage += "Contact Number 2: " + contactNumber2 + "\n";
-                confirmMessage += "Contact Number 3: " + contactNumber3 + "\n";
-                confirmMessage += "Nearest City: " + nearestCity + "\n";
-                confirmMessage += "Highway: " + highway + "\n";
-                confirmMessage += "Web site: " + website + "\n";
-                confirmMessage += "Vehicle Categories: " + selectedVehicles.join(', ') + "\n";
-                confirmMessage += "Services Provided: " + selectedServices.join(', ') + "\n";
-                confirmMessage += "Remarks: " + remarks + "\n";
-                
-                // Show confirmation popup
-                if (confirm(confirmMessage)) {
-                    document.getElementById("garageForm").submit();
-                }
-            } else {
-                alert("Please fill in all the fields.");
+            /* ---------- BASIC REQUIRED FIELD CHECK ---------- */
+            if (!garageName || !address || !nearestCity || !highway) {
+                alert("Please fill in all required fields.");
+                return;
             }
+
+            /* ---------- PHONE VALIDATION ---------- */
+            if (!isValidPhone(contactNumber, true)) {
+                alert("Primary contact number must be 9 or 10 digits.");
+                return;
+            }
+
+            if (!isValidPhone(contactNumber2, false)) {
+                alert("Contact Number 2 must be 9 or 10 digits if provided.");
+                return;
+            }
+
+            if (!isValidPhone(contactNumber3, false)) {
+                alert("Contact Number 3 must be 9 or 10 digits if provided.");
+                return;
+            }
+            
+            var confirmMessage = "Are you sure you want to submit the following data?\n\n";
+            confirmMessage += "Garage Name: " + garageName + "\n";
+            confirmMessage += "Address: " + address + "\n";
+            confirmMessage += "Location: " + location + "\n";
+            confirmMessage += "Contact Number: " + contactNumber + "\n";
+            confirmMessage += "Contact Number 2: " + contactNumber2 + "\n";
+            confirmMessage += "Contact Number 3: " + contactNumber3 + "\n";
+            confirmMessage += "Nearest City: " + nearestCity + "\n";
+            confirmMessage += "Highway: " + highway + "\n";
+            confirmMessage += "Web site: " + website + "\n";
+            confirmMessage += "Vehicle Categories: " + selectedVehicles.join(', ') + "\n";
+            confirmMessage += "Services Provided: " + selectedServices.join(', ') + "\n";
+            confirmMessage += "Remarks: " + remarks + "\n";
+            
+            // Show confirmation popup
+            if (confirm(confirmMessage)) {
+                document.getElementById("garageForm").submit();
+            }
+            
         }
     </script>
 </head>
@@ -211,13 +246,13 @@
                 <input type="text" id="field13" name="field13" required><br>
             
                 <label for="contactNumber">Contact Number:</label><br>
-                <input type="text" id="contactNumber" name="contactNumber" required><br>
+                <input type="text" id="contactNumber" name="contactNumber" inputmode="numeric" pattern="[0-9]{9,10}" required><br>
                 
                 <label for="contactNumber2">Contact Number 2:</label><br>
-                <input type="text" id="contactNumber2" name="contactNumber2" required><br>
+                <input type="text" id="contactNumber2" name="contactNumber2" inputmode="numeric" pattern="[0-9]{9,10}"><br>
             	
             	<label for="contactNumber3">Contact Number 3:</label><br>
-                <input type="text" id="contactNumber3" name="contactNumber3" required><br>
+                <input type="text" id="contactNumber3" name="contactNumber3" inputmode="numeric" pattern="[0-9]{9,10}"><br>
                 
                 <label for="nearestCity">Nearest City:</label><br>
                 <input type="text" id="nearestCity" name="nearestCity" required><br>

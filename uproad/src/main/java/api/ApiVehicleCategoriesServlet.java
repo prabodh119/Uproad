@@ -1,7 +1,6 @@
 package api;
 
 import dbc.DBConnection;
-import util.TokenUtil;
 import dao.VehicleCategory;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -34,25 +33,10 @@ public class ApiVehicleCategoriesServlet extends HttpServlet {
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
-        PrintWriter out = response.getWriter();
-
-        try {
-            String authHeader = request.getHeader("Authorization");
-            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                out.write("{\"error\":\"Missing or invalid Authorization header\"}");
-                return;
-            }
-
-            String token = authHeader.substring(7);
-            String username = TokenUtil.validateToken(token);
-            if (username == null) {
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                out.write("{\"error\":\"Invalid or expired token\"}");
-                return;
-            }
-
-            DBConnection dbc = new DBConnection();
+        
+        try (PrintWriter out = response.getWriter()) {
+			
+        	DBConnection dbc = new DBConnection();
             List<VehicleCategory> categories = dbc.getVehicleCategory(); // implement in DBConnection
 
             JSONArray arr = new JSONArray();
@@ -61,13 +45,15 @@ public class ApiVehicleCategoriesServlet extends HttpServlet {
                 obj.put("vehicleCategory", vc.getVehicleCategory());
                 arr.put(obj);
             }
-
+            response.setStatus(HttpServletResponse.SC_OK);
             out.write(arr.toString());
 
         } catch (Exception e) {
             e.printStackTrace();
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            out.write("{\"error\":\"Server error\"}");
+            try (PrintWriter out = response.getWriter()) {
+            	out.write("{\"error\":\"Server error\"}");
+            }
         }
 	}
 

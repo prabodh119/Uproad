@@ -1,6 +1,8 @@
 package web;
 
 import java.io.IOException;
+import java.sql.SQLException;
+
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -32,11 +34,20 @@ public class ManageDataServlet extends HttpServlet {
 		int id = Integer.parseInt(request.getParameter("id"));
 		
 		if(action.equals("delete")) {
-			boolean res = new DBConnection().deleteRecord(id);
-			if(res)
-	        	request.setAttribute("message", "Record successfully deleted.");
-	        else
-	        	request.setAttribute("message", "Failed to delete data.");
+			DBConnection dbc = new DBConnection();
+			try {
+			    boolean deleted = dbc.deleteRecord(id);
+			    if (deleted) {
+			        System.out.println("Garage deleted successfully!");
+			        request.setAttribute("message", "Record deleted!");
+			    } else {
+			        System.out.println("Garage with index " + id + " not found.");
+			        request.setAttribute("message", "Delete failed! Record not found.");
+			    }
+			} catch (SQLException e) {
+			    System.out.println("Database error: " + e.getMessage());
+			    request.setAttribute("message", "Database error: " + e.getMessage());
+			}
 	        
 	        request.getRequestDispatcher("searchResults.jsp").forward(request, response);
 		}

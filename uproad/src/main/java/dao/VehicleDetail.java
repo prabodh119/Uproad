@@ -1,21 +1,33 @@
 package dao;
 
 public class VehicleDetail {
+	int id;
 	String username;
 	String make;
 	String model;
 	String year;
 	String vehicleCategory;
+	String nickname;
 	
-	public VehicleDetail(String username, String make, String model, String year, String vehicleCategory) {
+	public VehicleDetail(int id, String username, String make, String model, String year, String vehicleCategory, String nickname) {
 		super();
+		this.id = id;
 		this.username = username;
 		this.make = make;
 		this.model = model;
 		this.year = year;
 		this.vehicleCategory = vehicleCategory;
+		this.nickname = nickname;
 	}
 
+	public int getId() {
+		return id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
+	}
+	
 	public String getUsername() {
 		return username;
 	}
@@ -55,6 +67,13 @@ public class VehicleDetail {
 	public void setVehicleCategory(String vehicleCategory) {
 		this.vehicleCategory = vehicleCategory;
 	}
-	
+
+	public String getNickname() {
+		return nickname;
+	}
+
+	public void setNickname(String nickname) {
+		this.nickname = nickname;
+	}
 	
 }
