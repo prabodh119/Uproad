@@ -90,7 +90,7 @@
         <div class="menu-bar">
             <a href="insertData.jsp">Insert Garage Data</a>
             <!-- You can add more links here as needed -->
-            <a href="/uproad/AdminSearchServlet?searchAll=true">Show All</a>
+            <a href="/AdminSearchServlet?searchAll=true">Show All</a>
             <a href="#">Yet Another Link</a>
         </div>
 
@@ -98,7 +98,7 @@
         <div class="section">
             <h2>Search Garage</h2>
 	            <div class="search-box">
-		            <form id="searchForm" action="/uproad/AdminSearchServlet" method="post">
+		            <form id="searchForm" action="/AdminSearchServlet" method="post">
 		            	<input type="hidden" name="searchType" id="searchType" value="">
 		            	<input type="hidden" name="searchCriteria" id="searchCriteria" value="">
 			            <!-- Name -->
@@ -130,7 +130,7 @@
         </div>
         
          <!-- Back Button -->
-        <a href="/uproad/LogoutServlet" class="back-button">Logout</a>
+        <a href="/LogoutServlet" class="back-button">Logout</a>
     </div>
     
     <script type="text/javascript">

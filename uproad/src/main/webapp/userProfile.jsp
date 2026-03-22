@@ -182,7 +182,7 @@
         
         <h3>Your Vehicles</h3>
         
-		<form id="searchForm" action="/uproad/SearchServlet" method="GET" onsubmit="return validateVehicleSelection()">
+		<form id="searchForm" action="/SearchServlet" method="GET" onsubmit="return validateVehicleSelection()">
 		    <div class="vehicle-info">
 		        <% if (vehicleList != null && !vehicleList.isEmpty()) { %>
 		            <% for (VehicleDetail vehicle : vehicleList) { %>
@@ -227,7 +227,7 @@
         <!-- Add Vehicle Button -->
         <button class="button" onclick="openModal()">Add Vehicle</button>
         <!-- Logout Button -->
-		<form action="/uproad/LogoutServlet" method="GET">
+		<form action="/LogoutServlet" method="GET">
 		    <button type="submit" class="logout-button">Logout</button>
 		</form>
         
@@ -239,7 +239,7 @@
             <span class="close" onclick="closeModal()">&times;</span>
             <h3>Add Vehicle</h3>
             
-            <form action="/uproad/AddVehicleServlet" method="POST">
+            <form action="/AddVehicleServlet" method="POST">
                 <input type="text" name="vehicleMake" class="input-field" placeholder="Vehicle Make" required><br>
                 <input type="text" name="vehicleModel" class="input-field" placeholder="Vehicle Model" required><br>
                 <input type="text" name="vehicleYear" class="input-field" placeholder="Vehicle Year" required><br>

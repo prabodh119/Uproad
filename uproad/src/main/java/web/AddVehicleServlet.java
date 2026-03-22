@@ -13,7 +13,7 @@ import dbc.DBConnection;
 /**
  * Servlet implementation class EditProfileServlet
  */
-@WebServlet("/EditProfileServlet")
+@WebServlet("/AddVehicleServlet")
 public class AddVehicleServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
        

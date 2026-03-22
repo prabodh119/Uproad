@@ -82,17 +82,19 @@ public class LoginFilter implements Filter {
 	        logger.info("Request: "+uri);
 	       
 	        List<String> allowedPaths = Arrays.asList(
-	        		"/uproad/", 
-	        		"/uproad/login.jsp",
-	        		"/uproad/landing.html",
-	        		"/uproad/LoginServlet", 
-	        		"/uproad/SignupServlet", 
-	        		"/uproad/verifyEmail",
-	        		"/uproad/forgotPassword",
-	        		"/uproad/ForgotPasswordServlet",
-	        		"/uproad/resetPassword.jsp",
-	        		"/uproad/ResetPasswordServlet",
-	        		"/uproad/test.html"
+	        		"/", 
+	        		"/login.jsp",
+	        		"/landing.html",
+	        		"/LoginServlet", 
+	        		"/SignupServlet", 
+	        		"/verifyEmail",
+	        		"/forgotPassword",
+	        		"/ForgotPasswordServlet",
+	        		"/resetPassword.jsp",
+	        		"/ResetPasswordServlet",
+	        		"/test.html",
+	        		"/privacy-policy.html",
+	        		"/terms-and-conditions.html"
 	        );
 	        
 	        // Allow static resources by file extension
@@ -101,9 +103,9 @@ public class LoginFilter implements Filter {
 	                || uri.endsWith(".woff") || uri.endsWith(".ttf") || uri.endsWith(".ico") || uri.endsWith(".svg");
 	
 	        // API request detection
-	        boolean isApiRequest = uri.startsWith("/uproad/api/");
-	        boolean isPublicApi = uri.equals("/uproad/api/login") || uri.equals("/uproad/api/register") ||uri.equals("/uproad/api/vehicleCategories")
-	        		|| uri.equals("/uproad/api/users/verify") || uri.equals("/uproad/api/forgotPassword") || uri.equals("/uproad/api/resetPassword");
+	        boolean isApiRequest = uri.startsWith("/api/");
+	        boolean isPublicApi = uri.equals("/api/login") || uri.equals("/api/register") ||uri.equals("/api/vehicleCategories")
+	        		|| uri.equals("/api/users/verify") || uri.equals("/api/forgotPassword") || uri.equals("/api/resetPassword");
 	        //boolean isLoginApi = uri.equals("/uproad/api/login");
 	        
 	        if (isApiRequest) {
@@ -139,7 +141,7 @@ public class LoginFilter implements Filter {
 	            
 	        } else {
 	            // Not logged in and trying to access protected resource → redirect to login page
-	            httpResponse.sendRedirect("/uproad/");
+	            httpResponse.sendRedirect("/");
 	        }
         } finally {
         	// IMPORTANT: clear MDC for next request thread

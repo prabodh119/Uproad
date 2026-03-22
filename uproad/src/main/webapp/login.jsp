@@ -127,7 +127,7 @@
 	</c:if>
         
     <h2>Login</h2>
-    <form action="/uproad/LoginServlet" method="POST">
+    <form action="/LoginServlet" method="POST">
         <input type="text" name="username" class="input-field" placeholder="Username" required>
         <input type="password" name="password" class="input-field" placeholder="Password" required>
         <button type="submit" class="login-button">Login</button>
@@ -148,7 +148,7 @@
 		<span class="close" onclick="closeForgotPassModal()">&times;</span>
 		<h2>Forgot Password</h2>
 		
-		<form action="/uproad/forgotPassword" method="POST">
+		<form action="/forgotPassword" method="POST">
 			<input type="email" name="email" class="input-field" placeholder="Enter your email" required />
 			<button type="submit" class="forgotPass-button">Send Reset Link</button>
 		</form>
@@ -164,7 +164,7 @@
         <span class="close" onclick="closeSignupModal()">&times;</span>
         <h2>Sign Up</h2>
         
-        <form id="signupForm" action="/uproad/SignupServlet" method="POST" onsubmit="return validatePassword()">
+        <form id="signupForm" action="/SignupServlet" method="POST" onsubmit="return validatePassword()">
             <label for="name">Name:</label>
             <input type="text" name="name" class="input-field" required>
 
@@ -209,7 +209,7 @@
 <script>
 	$(document).ready(function () {
 	    $.ajax({
-	        url: '/uproad/api/vehicleCategories',   // updated URL
+	        url: '/api/vehicleCategories',   // updated URL
 	        type: 'GET',
 	        dataType: 'json',
 	        success: function (data) {

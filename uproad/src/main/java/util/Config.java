@@ -25,7 +25,7 @@ public class Config {
 
     public static String getBaseUrl() {
         String env = getEnv();
-        return props.getProperty("base.url." + env, "http://localhost:8080/uproad");
+        return props.getProperty("base.url." + env, "http://localhost:8080");
     }
     
     public static String getEmailVerifyDeeplink() {

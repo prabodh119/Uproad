@@ -88,7 +88,7 @@ boolean valid = dbc.isValidResetToken(token);
         if (valid) {
         %>
         <h2>Reset Your Password</h2>
-        <form action="/uproad/ResetPasswordServlet" method="POST">
+        <form action="/ResetPasswordServlet" method="POST">
             <input type="hidden" name="token" value="<%=token%>" /> 
             <input type="password" name="password" placeholder="New Password" required>
             <input type="password" name="confirmPassword" placeholder="Confirm Password" required>

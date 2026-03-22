@@ -62,7 +62,7 @@
 <body>
 	<div class="container">
 		<h2>Forgot Password</h2>
-		<form action="/uproad/ForgotPasswordServlet" method="POST">
+		<form action="/ForgotPasswordServlet" method="POST">
 			<input type="email" name="email" placeholder="Enter your email"
 				required />
 			<button type="submit">Send Reset Link</button>

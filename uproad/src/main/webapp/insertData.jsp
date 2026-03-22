@@ -234,7 +234,7 @@
         </c:if>
         
         <div class="form-container">
-            <form id="garageForm" method="post" action="/uproad/InsertDataServlet">
+            <form id="garageForm" method="post" action="/InsertDataServlet">
 
                 <label for="garageName">Garage Name:</label><br>
                 <input type="text" id="garageName" name="garageName" required><br>
